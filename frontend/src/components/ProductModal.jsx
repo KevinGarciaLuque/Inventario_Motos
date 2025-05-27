@@ -1,0 +1,152 @@
+import React from "react";
+
+// Cambia esto por tu backend real si es deploy
+const API_URL = "http://localhost:5000";
+
+function formatCurrency(n) {
+  if (!n) return "-";
+  return Number(n).toLocaleString("es-HN", {
+    style: "currency",
+    currency: "HNL",
+  });
+}
+
+export default function ProductModal({ product, onClose }) {
+  if (!product) return null;
+
+  const {
+    imagen,
+    nombre,
+    codigo,
+    categoria,
+    ubicacion,
+    stock,
+    precio,
+    descripcion,
+  } = product;
+
+  // Utilidad para construir el src de la imagen
+  const getImgSrc = () => {
+    if (!imagen) return "";
+    if (imagen.startsWith("http")) return imagen;
+    if (imagen.startsWith("/uploads")) return API_URL + imagen;
+    return API_URL + "/uploads/" + imagen;
+  };
+
+  return (
+    <div
+      className="modal fade show d-block"
+      tabIndex="-1"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content border-0 shadow-lg">
+          {/* Encabezado */}
+          <div className="modal-header bg-primary text-white">
+            <div className="d-flex align-items-center">
+              <i
+                className="bi bi-box-seam me-2"
+                style={{ fontSize: "1.5rem" }}
+              ></i>
+              <h5 className="modal-title mb-0">{nombre}</h5>
+            </div>
+            <button
+              type="button"
+              className="btn-close btn-close-white"
+              onClick={onClose}
+              aria-label="Cerrar"
+            ></button>
+          </div>
+
+          {/* Cuerpo */}
+          <div className="modal-body">
+            <div className="row g-3">
+              {/* Imagen */}
+              <div className="col-12 text-center mb-2">
+                {imagen ? (
+                  <img
+                    src={getImgSrc()}
+                    alt={nombre}
+                    className="img-fluid rounded border shadow"
+                    style={{ maxHeight: 180, maxWidth: "90%" }}
+                    onError={(e) => (e.target.style.display = "none")}
+                  />
+                ) : (
+                  <div className="text-muted small">Sin imagen</div>
+                )}
+              </div>
+              {/* Primera columna */}
+              <div className="col-md-6">
+                <div className="d-flex align-items-center mb-3">
+                  <i className="bi bi-upc-scan text-muted me-2"></i>
+                  <div>
+                    <small className="text-muted">Código</small>
+                    <div className="fw-semibold">{codigo}</div>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center mb-3">
+                  <i className="bi bi-tag text-muted me-2"></i>
+                  <div>
+                    <small className="text-muted">Categoría</small>
+                    <div className="fw-semibold">{categoria || "-"}</div>
+                  </div>
+                </div>
+              </div>
+              {/* Segunda columna */}
+              <div className="col-md-6">
+                <div className="d-flex align-items-center mb-3">
+                  <i className="bi bi-geo-alt text-muted me-2"></i>
+                  <div>
+                    <small className="text-muted">Ubicación</small>
+                    <div className="fw-semibold">{ubicacion || "-"}</div>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center mb-3">
+                  <i className="bi bi-box text-muted me-2"></i>
+                  <div>
+                    <small className="text-muted">Stock</small>
+                    <div className="fw-semibold">{stock} unidades</div>
+                  </div>
+                </div>
+              </div>
+              {/* Precio */}
+              <div className="col-12">
+                <div className="d-flex align-items-center mb-3">
+                  <i className="bi bi-currency-dollar text-muted me-2"></i>
+                  <div>
+                    <small className="text-muted">Precio</small>
+                    <div className="fw-semibold">{formatCurrency(precio)}</div>
+                  </div>
+                </div>
+              </div>
+              {/* Descripción */}
+              <div className="col-12">
+                <div className="border-top pt-3">
+                  <div className="d-flex align-items-start mb-2">
+                    <i className="bi bi-text-paragraph text-muted me-2 mt-1"></i>
+                    <div>
+                      <small className="text-muted">Descripción</small>
+                      <p className="mb-0 text-break">{descripcion || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Pie del Modal */}
+          <div className="modal-footer bg-light">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={onClose}
+            >
+              <i className="bi bi-x-lg me-1"></i> Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

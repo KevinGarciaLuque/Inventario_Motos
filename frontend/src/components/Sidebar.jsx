@@ -3,18 +3,26 @@ import {
   FaBoxes,
   FaPlus,
   FaTags,
+  FaFilter, 
   FaMapMarkerAlt,
   FaChartBar,
+  FaHistory,
+  FaUserFriends,
   FaAngleDoubleLeft,
   FaAngleDoubleRight,
 } from "react-icons/fa";
 
 const menuItems = [
   { key: "inventory", label: "Inventario", icon: <FaBoxes /> },
+  { key: "reports", label: "Reportes", icon: <FaChartBar /> },
+  { key: "users", label: "Usuarios", icon: <FaUserFriends /> }, // Botón de usuarios agregado aquí
   { key: "add-product", label: "Añadir Producto", icon: <FaPlus /> },
   { key: "categories", label: "Categorías", icon: <FaTags /> },
   { key: "locations", label: "Ubicaciones", icon: <FaMapMarkerAlt /> },
-  { key: "reports", label: "Reportes", icon: <FaChartBar /> },
+  { key: "bitacora", label: "Bitácora", icon: <FaFilter /> },
+  { key: "registrar-movimiento", label: "Registrar Movimiento", icon: <FaHistory /> },
+
+
 ];
 
 export default function Sidebar({
@@ -22,7 +30,6 @@ export default function Sidebar({
   onChangePage,
   isCollapsed = false,
   onToggle,
-  sidebarOpen,
 }) {
   return (
     <div

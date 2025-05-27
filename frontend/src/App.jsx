@@ -1,19 +1,28 @@
-import React, { useState } from "react";
+import React from "react";
 import Login from "./components/Login";
 import Layout from "./components/Layout";
+import { useUser } from "./context/UserContext"; // <--- usa tu hook
 
-// Componente principal de la aplicación
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, loading, login, logout } = useUser();
+
+  if (loading) {
+    // Puedes poner un spinner o simplemente null
+    return (
+      <div className="d-flex min-vh-100 align-items-center justify-content-center">
+        <div className="spinner-border text-warning" role="status"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">
-      {/* Si no está logueado, muestra Login */}
-      {!isLoggedIn ? (
-        <Login onLogin={() => setIsLoggedIn(true)} />
+      {!user ? (
+        <Login onLogin={login} />
       ) : (
-        <Layout onLogout={() => setIsLoggedIn(false)} />
+        <Layout user={user} onLogout={logout} />
       )}
     </div>
   );
 }
+

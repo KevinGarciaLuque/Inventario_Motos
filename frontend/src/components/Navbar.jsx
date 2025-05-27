@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useUser } from "../context/UserContext"; // Usa el context, así NO necesitas pasar user por props
 
 export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) {
+  const { user, logout } = useUser(); // Obtén usuario y función logout del contexto
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef();
 
@@ -18,10 +20,22 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
+  // Si no hay user, muestra solo el título
+  if (!user) {
+    return (
+      <nav className="navbar navbar-expand bg-white shadow-sm py-2 px-3 border-bottom position-sticky top-0 z-2">
+        <div className="navbar-brand">
+          <i className="bi bi-box-seam-fill text-warning-emphasis me-2" style={{ fontSize: "2rem" }}></i>
+          <span className="fs-5 fw-bold text-dark">Gestión de Inventario</span>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav className="navbar navbar-expand bg-white shadow-sm py-2 px-3 border-bottom position-sticky top-0 z-2">
       <div className="container-fluid d-flex align-items-center">
-        {/* Botón hamburguesa sidebar (visible en móvil, y rotatorio si sidebar colapsado en desktop) */}
+        {/* Botón hamburguesa sidebar */}
         <button
           onClick={onToggleSidebar}
           className="btn btn-link text-dark me-2 d-lg-inline d-print-none"
@@ -37,8 +51,7 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
             }}
           />
         </button>
-
-        {/* Título con icono animado */}
+        {/* Título con icono */}
         <div className="navbar-brand d-flex align-items-center user-select-none">
           <i
             className="bi bi-box-seam-fill text-warning-emphasis me-2"
@@ -51,9 +64,7 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
             Gestión de Inventario
           </span>
         </div>
-
         <div className="flex-grow-1" />
-
         {/* Usuario */}
         <div className="dropdown" ref={dropdownRef}>
           <button
@@ -70,7 +81,10 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
               <i className="bi bi-person-fill fs-4 text-primary"></i>
             </span>
             <span className="fw-semibold text-secondary d-none d-md-inline">
-              Administrador
+              {user.nombre}
+              <span className={`badge ms-2 ${user.rol === "admin" ? "bg-primary" : "bg-secondary"}`}>
+                {user.rol === "admin" ? "Administrador" : "Usuario"}
+              </span>
             </span>
             <i className="bi bi-caret-down-fill ms-1 text-muted d-none d-md-inline" style={{ fontSize: 13 }} />
           </button>
@@ -96,7 +110,10 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
               <hr className="dropdown-divider" />
             </li>
             <li>
-              <button onClick={onLogout} className="dropdown-item text-danger">
+              <button
+                onClick={logout}
+                className="dropdown-item text-danger"
+              >
                 <i className="bi bi-box-arrow-right me-2"></i>
                 Cerrar Sesión
               </button>
@@ -114,4 +131,3 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
     </nav>
   );
 }
-

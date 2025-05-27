@@ -7,6 +7,12 @@ import CategoriesPage from "../pages/CategoriesPage";
 import LocationsPage from "../pages/LocationsPage";
 import ReportsPage from "../pages/ReportsPage";
 import ProductModal from "./ProductModal";
+import UsersPage from "../pages/UsersPage";
+import BitacoraPage from "./BitacoraPage";
+import RegistrarMovimientoPage from "../pages/RegistrarMovimientoPage"
+
+// ¡Ya NO necesitas recibir ni pasar 'user' por props!
+// Solo mantén el prop onLogout para cerrar sesión.
 
 export default function Layout({ onLogout }) {
   const [currentPage, setCurrentPage] = useState("inventory");
@@ -14,7 +20,7 @@ export default function Layout({ onLogout }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    setSidebarCollapsed((v) => !v);
   };
 
   return (
@@ -36,7 +42,11 @@ export default function Layout({ onLogout }) {
 
       {/* Main Content */}
       <div className="d-flex flex-column flex-grow-1 overflow-hidden">
-        <Navbar onLogout={onLogout} onToggleSidebar={toggleSidebar} />
+        <Navbar
+          onLogout={onLogout}
+          onToggleSidebar={toggleSidebar}
+          sidebarCollapsed={sidebarCollapsed}
+        />
 
         <main className="flex-grow-1 p-4 overflow-auto">
           <div className="container-fluid py-3">
@@ -49,6 +59,10 @@ export default function Layout({ onLogout }) {
                 {currentPage === "categories" && <CategoriesPage />}
                 {currentPage === "locations" && <LocationsPage />}
                 {currentPage === "reports" && <ReportsPage />}
+                {currentPage === "users" && <UsersPage />}
+                {currentPage === "bitacora" && <BitacoraPage />}
+                {currentPage === "registrar-movimiento" && <RegistrarMovimientoPage />}
+
               </div>
             </div>
           </div>

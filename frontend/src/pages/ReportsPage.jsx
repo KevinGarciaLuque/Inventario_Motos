@@ -5,7 +5,6 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
 import {
   Chart as ChartJS,
   BarElement,
@@ -14,10 +13,12 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { FaSearch, FaRedo } from "react-icons/fa";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 export default function ReportsPage() {
+  // Estados principales
   const [resumen, setResumen] = useState({
     productosUnicos: 0,
     totalStock: 0,
@@ -28,7 +29,20 @@ export default function ReportsPage() {
   const [productos, setProductos] = useState([]);
   const [logoBase64, setLogoBase64] = useState(null);
 
-  // Cargar logo base64 para el PDF
+  // Movimientos
+  const [movimientos, setMovimientos] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [productosFiltro, setProductosFiltro] = useState([]);
+  const [movLoading, setMovLoading] = useState(false);
+  const [filtros, setFiltros] = useState({
+    fecha_inicio: "",
+    fecha_fin: "",
+    usuario_id: "",
+    tipo: "",
+    producto_id: "",
+  });
+
+  // Cargar logo base64 para PDF
   useEffect(() => {
     fetch("/logo.png")
       .then((res) => res.blob())
@@ -39,7 +53,7 @@ export default function ReportsPage() {
       });
   }, []);
 
-  // Cargar los datos del inventario
+  // Cargar resumen de inventario y productos para gráfica/resumen
   useEffect(() => {
     const fetchResumen = async () => {
       try {
@@ -47,19 +61,13 @@ export default function ReportsPage() {
         const productos = productosRes.data;
         setProductos(productos);
 
-        // Cálculos
+        // KPIs
         const productosUnicos = productos.length;
-        const totalStock = productos.reduce(
-          (sum, p) => sum + Number(p.stock || 0),
-          0
-        );
+        const totalStock = productos.reduce((sum, p) => sum + Number(p.stock || 0), 0);
         const valorInventario = productos.reduce(
-          (sum, p) => sum + Number(p.stock || 0) * Number(p.precio || 0),
-          0
-        );
+          (sum, p) => sum + Number(p.stock || 0) * Number(p.precio || 0), 0);
         const bajoStock = productos.filter(
-          (p) => Number(p.stock) < Number(p.stock_minimo)
-        ).length;
+          (p) => Number(p.stock) < Number(p.stock_minimo)).length;
 
         // Por categoría
         const categoriasMap = {};
@@ -68,10 +76,7 @@ export default function ReportsPage() {
           categoriasMap[cat] = (categoriasMap[cat] || 0) + Number(p.stock || 0);
         });
         const categoriasArray = Object.entries(categoriasMap).map(
-          ([categoria, cantidad]) => ({
-            categoria,
-            cantidad,
-          })
+          ([categoria, cantidad]) => ({ categoria, cantidad })
         );
 
         setResumen({ productosUnicos, totalStock, valorInventario, bajoStock });
@@ -92,24 +97,48 @@ export default function ReportsPage() {
         ]);
       }
     };
+
+    // Productos y usuarios para filtros de movimientos
+    api.get("/usuarios").then((res) => setUsuarios(res.data));
+    api.get("/productos").then((res) => setProductosFiltro(res.data));
+
     fetchResumen();
+    cargarMovimientos(); // Carga movimientos al iniciar
+    // eslint-disable-next-line
   }, []);
 
-  // Datos para el gráfico
-  const chartData = {
-    labels: porCategoria.map((x) => x.categoria),
-    datasets: [
-      {
-        label: "Cantidad total en stock",
-        data: porCategoria.map((x) => x.cantidad),
-        backgroundColor: "#ffc107",
-        borderRadius: 8,
-        borderWidth: 1,
-      },
-    ],
+  // Cargar movimientos con filtros
+  const cargarMovimientos = async () => {
+    setMovLoading(true);
+    try {
+      const params = { ...filtros, limit: 15 }; // Solo últimos 15 por defecto
+      Object.keys(params).forEach((k) => params[k] === "" && delete params[k]);
+      const res = await api.get("/movimientos", { params });
+      setMovimientos(res.data || []);
+    } catch {
+      setMovimientos([]);
+    }
+    setMovLoading(false);
   };
 
-  // Exportar a Excel inventario
+  // Filtros
+  const handleFiltro = (e) => {
+    const { name, value } = e.target;
+    setFiltros((f) => ({ ...f, [name]: value }));
+  };
+
+  const limpiarFiltros = () => {
+    setFiltros({
+      fecha_inicio: "",
+      fecha_fin: "",
+      usuario_id: "",
+      tipo: "",
+      producto_id: "",
+    });
+    setTimeout(cargarMovimientos, 0);
+  };
+
+  // --- Exportaciones ---
   const exportExcel = () => {
     const data = productos.map((prod) => ({
       Código: prod.codigo,
@@ -125,10 +154,45 @@ export default function ReportsPage() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Inventario");
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(
-      new Blob([wbout], { type: "application/octet-stream" }),
-      "inventario.xlsx"
-    );
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "inventario.xlsx");
+  };
+
+  // Exportar movimientos filtrados
+  const exportMovimientosExcel = () => {
+    const data = movimientos.map((m) => ({
+      Fecha: new Date(m.fecha).toLocaleString("es-HN"),
+      Producto: m.producto_nombre,
+      Tipo: m.tipo,
+      Cantidad: m.cantidad,
+      Usuario: m.usuario_nombre || "N/A",
+      Descripción: m.descripcion,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Movimientos");
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([wbout], { type: "application/octet-stream" }), "movimientos.xlsx");
+  };
+
+  const exportMovimientosPDF = () => {
+    const doc = new jsPDF("l", "pt", "a4");
+    doc.setFontSize(16);
+    doc.text("Movimientos recientes", 40, 40);
+    autoTable(doc, {
+      head: [["Fecha", "Producto", "Tipo", "Cantidad", "Usuario", "Descripción"]],
+      body: movimientos.map((m) => [
+        new Date(m.fecha).toLocaleString("es-HN"),
+        m.producto_nombre,
+        m.tipo,
+        m.cantidad,
+        m.usuario_nombre || "N/A",
+        m.descripcion,
+      ]),
+      startY: 60,
+      styles: { fontSize: 9 },
+      margin: { left: 40, right: 40 },
+    });
+    doc.save("movimientos_recientes.pdf");
   };
 
   // Exportar PDF inventario
@@ -152,7 +216,6 @@ export default function ReportsPage() {
       { header: "Descripción", dataKey: "descripcion" },
     ];
 
-    // ¡Usa autoTable correctamente!
     autoTable(doc, {
       head: [columns.map((col) => col.header)],
       body: productos.map((prod) => columns.map((col) => prod[col.dataKey])),
@@ -165,73 +228,18 @@ export default function ReportsPage() {
     doc.save("inventario.pdf");
   };
 
-  // Exportar resumen PDF
-  const exportResumenPDF = () => {
-    const doc = new jsPDF();
-    if (logoBase64) {
-      doc.addImage(logoBase64, "PNG", 15, 8, 30, 30);
-    }
-    doc.setFontSize(16);
-    doc.text("Resumen de Inventario", 50, 22);
-
-    doc.setFontSize(11);
-    autoTable(doc, {
-      startY: 40,
-      head: [["Concepto", "Valor"]],
-      body: [
-        ["Referencias únicas", resumen.productosUnicos],
-        ["Total en stock", resumen.totalStock],
-        [
-          "Valor inventario",
-          resumen.valorInventario.toLocaleString("es-HN", {
-            style: "currency",
-            currency: "HNL",
-          }),
-        ],
-        ["Bajo stock", resumen.bajoStock],
-      ],
-      theme: "grid",
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [255, 193, 7] },
-      margin: { left: 15, right: 15 },
-    });
-
-    autoTable(doc, {
-      startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 80,
-      head: [["Categoría", "Cantidad en stock"]],
-      body: porCategoria.map((c) => [c.categoria, c.cantidad]),
-      theme: "grid",
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [255, 193, 7] },
-      margin: { left: 15, right: 15 },
-    });
-
-    doc.save("resumen_inventario.pdf");
-  };
-
-  // Exportar resumen a Excel
-  const exportResumenExcel = () => {
-    const resumenData = [
-      { Concepto: "Referencias únicas", Valor: resumen.productosUnicos },
-      { Concepto: "Total en stock", Valor: resumen.totalStock },
-      { Concepto: "Valor inventario", Valor: resumen.valorInventario },
-      { Concepto: "Bajo stock", Valor: resumen.bajoStock },
-    ];
-    const categoriaData = porCategoria.map((c) => ({
-      Categoría: c.categoria,
-      "Cantidad en stock": c.cantidad,
-    }));
-
-    const ws1 = XLSX.utils.json_to_sheet(resumenData);
-    const ws2 = XLSX.utils.json_to_sheet(categoriaData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws1, "Resumen");
-    XLSX.utils.book_append_sheet(wb, ws2, "Por Categoría");
-    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(
-      new Blob([wbout], { type: "application/octet-stream" }),
-      "resumen_inventario.xlsx"
-    );
+  // --- CHART DATA ---
+  const chartData = {
+    labels: porCategoria.map((x) => x.categoria),
+    datasets: [
+      {
+        label: "Cantidad total en stock",
+        data: porCategoria.map((x) => x.cantidad),
+        backgroundColor: "#ffc107",
+        borderRadius: 8,
+        borderWidth: 1,
+      },
+    ],
   };
 
   return (
@@ -240,23 +248,20 @@ export default function ReportsPage() {
         <i className="bi bi-bar-chart-fill text-warning me-2"></i>
         Reportes
       </h2>
-      <div className="d-flex flex-wrap gap-2 mb-4 justify-content-end">
-        <button className="btn btn-success" onClick={exportExcel}>
-          <i className="bi bi-file-earmark-excel me-1"></i> Inventario Excel
-        </button>
-        <button className="btn btn-primary" onClick={exportPDF}>
-          <i className="bi bi-file-earmark-pdf me-1"></i> Inventario PDF
-        </button>
-        <button
-          className="btn btn-outline-success"
-          onClick={exportResumenExcel}
-        >
-          <i className="bi bi-file-earmark-excel me-1"></i> Resumen Excel
-        </button>
-        <button className="btn btn-outline-primary" onClick={exportResumenPDF}>
-          <i className="bi bi-file-earmark-pdf me-1"></i> Resumen PDF
-        </button>
+      <div className="row g-2 mb-4 justify-content-end">
+        <div className="col-auto">
+          <button className="btn btn-success w-100" onClick={exportExcel}>
+            <i className="bi bi-file-earmark-excel me-1"></i> Inventario Excel
+          </button>
+        </div>
+        <div className="col-auto">
+          <button className="btn btn-primary w-100" onClick={exportPDF}>
+            <i className="bi bi-file-earmark-pdf me-1"></i> Inventario PDF
+          </button>
+        </div>
       </div>
+
+      {/* Resumen y Gráfica */}
       <div className="row g-4 mb-4">
         <div className="col-6 col-md-3">
           <div className="card border-0 shadow h-100 text-center">
@@ -305,6 +310,8 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      {/* Gráfica */}
       <div className="card border-0 shadow p-4 mb-4">
         <h5 className="mb-3">
           <i className="bi bi-graph-up-arrow text-warning me-2"></i>
@@ -314,10 +321,7 @@ export default function ReportsPage() {
           data={chartData}
           options={{
             responsive: true,
-            plugins: {
-              legend: { display: false },
-              tooltip: { enabled: true },
-            },
+            plugins: { legend: { display: false }, tooltip: { enabled: true } },
             scales: {
               x: { grid: { display: false } },
               y: { beginAtZero: true, grid: { color: "#eee" } },
@@ -325,6 +329,163 @@ export default function ReportsPage() {
           }}
           height={100}
         />
+      </div>
+
+      {/* Filtros y Tabla Movimientos */}
+      <div className="card border-0 shadow p-4">
+        <h5 className="mb-3">
+          <i className="bi bi-clock-history text-warning me-2"></i>
+          Movimientos recientes de inventario
+        </h5>
+
+        {/* Filtros: siempre apilados en mobile, en línea en desktop */}
+        <form
+          className="row g-2 align-items-end mb-3"
+          onSubmit={e => {
+            e.preventDefault();
+            cargarMovimientos();
+          }}
+        >
+          <div className="col-6 col-md-2">
+            <label className="form-label">Fecha inicio</label>
+            <input
+              type="date"
+              className="form-control"
+              name="fecha_inicio"
+              value={filtros.fecha_inicio}
+              onChange={handleFiltro}
+            />
+          </div>
+          <div className="col-6 col-md-2">
+            <label className="form-label">Fecha fin</label>
+            <input
+              type="date"
+              className="form-control"
+              name="fecha_fin"
+              value={filtros.fecha_fin}
+              onChange={handleFiltro}
+            />
+          </div>
+          <div className="col-6 col-md-2">
+            <label className="form-label">Usuario</label>
+            <select
+              className="form-select"
+              name="usuario_id"
+              value={filtros.usuario_id}
+              onChange={handleFiltro}
+            >
+              <option value="">Todos</option>
+              {usuarios.map((u) => (
+                <option key={u.id} value={u.id}>{u.nombre}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-6 col-md-2">
+            <label className="form-label">Producto</label>
+            <select
+              className="form-select"
+              name="producto_id"
+              value={filtros.producto_id}
+              onChange={handleFiltro}
+            >
+              <option value="">Todos</option>
+              {productosFiltro.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-6 col-md-2">
+            <label className="form-label">Tipo</label>
+            <select
+              className="form-select"
+              name="tipo"
+              value={filtros.tipo}
+              onChange={handleFiltro}
+            >
+              <option value="">Todos</option>
+              <option value="entrada">Entrada</option>
+              <option value="salida">Salida</option>
+            </select>
+          </div>
+          <div className="col-12 col-md-2 d-flex gap-2">
+            <button className="btn btn-warning flex-fill" type="submit">
+              <FaSearch className="me-1" /> Buscar
+            </button>
+           
+          </div>
+          <div>
+          <button className="btn btn-outline-secondary flex-fill" type="button" onClick={limpiarFiltros}>
+              <FaRedo />
+            </button>
+            <button className="btn btn-outline-success flex-fill" type="button" onClick={exportMovimientosExcel}>
+              <i className="bi bi-file-earmark-excel"></i>
+            </button>
+            <button className="btn btn-outline-primary flex-fill" type="button" onClick={exportMovimientosPDF}>
+              <i className="bi bi-file-earmark-pdf"></i>
+            </button>
+          </div>
+        </form>
+
+        {/* Tabla de movimientos: horizontal scroll en móviles */}
+        <div className="table-responsive">
+          <table className="table table-bordered align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Usuario</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movLoading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-5">
+                    <span className="spinner-border text-warning me-2"></span>
+                    Cargando...
+                  </td>
+                </tr>
+              ) : movimientos.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center text-muted">
+                    No hay movimientos para mostrar
+                  </td>
+                </tr>
+              ) : (
+                movimientos.map((m) => (
+                  <tr key={m.id}>
+                    <td>
+                      {new Date(m.fecha).toLocaleString("es-HN", {
+                        day: "2-digit", month: "2-digit", year: "2-digit",
+                        hour: "2-digit", minute: "2-digit"
+                      })}
+                    </td>
+                    <td>{m.producto_nombre || "—"}</td>
+                    <td>
+                      <span className={`badge px-3 py-2 ${m.tipo === "entrada" ? "bg-success" : "bg-danger"}`}>
+                        {m.tipo === "entrada" ? "Entrada" : "Salida"}
+                      </span>
+                    </td>
+                    <td>{m.cantidad}</td>
+                    <td>
+                      <span className="badge bg-primary bg-opacity-25 text-primary px-3 py-2">
+                        {m.usuario_nombre || "Sistema"}
+                      </span>
+                    </td>
+                    <td style={{ wordBreak: "break-word" }}>{m.descripcion}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <small className="text-muted mt-2 d-block">
+          {movimientos.length === 15 && !Object.values(filtros).some(Boolean)
+            ? "Solo se muestran los últimos 15 movimientos."
+            : "Filtrado por los criterios seleccionados."}
+        </small>
       </div>
     </div>
   );

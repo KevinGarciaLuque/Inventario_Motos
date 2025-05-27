@@ -19,6 +19,12 @@ export default function AddProductPage() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // 1. OBTENER usuario_id DEL USUARIO LOGUEADO
+  // Lo más común es que lo tengas en localStorage, sessionStorage, o contexto.
+  // Ejemplo usando localStorage:
+  const usuario_id = JSON.parse(localStorage.getItem("usuario"))?.id;
+  // Si usas contexto de autenticación, usa el hook adecuado para traer el id
+
   useEffect(() => {
     api.get("/categorias").then((res) => setCategorias(res.data));
     api.get("/ubicaciones").then((res) => setUbicaciones(res.data));
@@ -35,6 +41,9 @@ export default function AddProductPage() {
     setPreview(file ? URL.createObjectURL(file) : null);
   };
 
+  // =======================
+  // Este es el submit principal
+  // =======================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -47,7 +56,6 @@ export default function AddProductPage() {
         const res = await api.post("/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        // ⬇️ El backend devuelve { filename, path }
         imageUrl = res.data.path;
       } catch (err) {
         alert("Error al subir la imagen");
@@ -57,10 +65,14 @@ export default function AddProductPage() {
     }
 
     try {
+      // ============ AQUI ES DONDE AGREGAS usuario_id ==============
       await api.post("/productos", {
         ...form,
-        imagen: imageUrl, // Guarda el path "/uploads/..."
+        imagen: imageUrl,
+        usuario_id, // <-- Se envía el ID del usuario que está haciendo el registro
       });
+      // ===========================================================
+
       alert("Producto agregado correctamente");
       setForm({
         codigo: "",
@@ -88,6 +100,7 @@ export default function AddProductPage() {
         onSubmit={handleSubmit}
         className="bg-white p-4 shadow rounded row g-3"
       >
+        {/* ...el resto del formulario igual... */}
         <div className="col-md-4">
           <label className="form-label">Código</label>
           <input

@@ -20,9 +20,9 @@ const menuItems = [
   { key: "add-product", label: "Añadir Producto", icon: <FaPlus /> },
   { key: "categories", label: "Categorías", icon: <FaTags /> },
   { key: "locations", label: "Ubicaciones", icon: <FaMapMarkerAlt /> },
-  { key: "bitacora", label: "Bitácora", icon: <FaFilter /> },
   { key: "movimientos", label: "Movimientos", icon: <FaExchangeAlt /> },
   { key: "registrar-movimiento", label: "Registrar Movimiento", icon: <FaHistory /> },
+  { key: "bitacora", label: "Bitácora", icon: <FaFilter /> },
 ];
 
 export default function Sidebar({

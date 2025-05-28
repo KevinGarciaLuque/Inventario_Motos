@@ -1,11 +1,10 @@
-// src/pages/RegistrarMovimientoPage.jsx
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useUser } from "../context/UserContext";
 import { FaPlus, FaMinus } from "react-icons/fa";
 
 export default function RegistrarMovimientoPage() {
-  const { user } = useUser(); // El usuario actual, debe tener user.id
+  const { user } = useUser();
   const [productos, setProductos] = useState([]);
   const [form, setForm] = useState({
     producto_id: "",
@@ -15,12 +14,10 @@ export default function RegistrarMovimientoPage() {
   });
   const [loading, setLoading] = useState(false);
 
-  // Cargar productos para el selector
   useEffect(() => {
     api.get("/productos").then((res) => setProductos(res.data));
   }, []);
 
-  // Cambios en el formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({
@@ -29,7 +26,6 @@ export default function RegistrarMovimientoPage() {
     }));
   };
 
-  // Manejar el envío
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.producto_id || !form.tipo || !form.cantidad || !user?.id) {
@@ -45,7 +41,7 @@ export default function RegistrarMovimientoPage() {
       await api.post("/movimientos", {
         ...form,
         cantidad: Number(form.cantidad),
-        usuario_id: user.id, // El id del usuario logueado
+        usuario_id: user.id,
       });
       alert("¡Movimiento registrado correctamente!");
       setForm({
@@ -71,10 +67,10 @@ export default function RegistrarMovimientoPage() {
       </h2>
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-4 shadow rounded row g-3"
+        className="bg-white p-4 shadow rounded row g-3 registro-movimiento-form"
         autoComplete="off"
       >
-        <div className="col-md-5">
+        <div className="col-md-5 col-12">
           <label className="form-label">Producto</label>
           <select
             className="form-select"
@@ -92,7 +88,7 @@ export default function RegistrarMovimientoPage() {
             ))}
           </select>
         </div>
-        <div className="col-md-2">
+        <div className="col-md-2 col-6">
           <label className="form-label">Tipo</label>
           <select
             className="form-select"
@@ -106,7 +102,7 @@ export default function RegistrarMovimientoPage() {
             <option value="salida">Salida</option>
           </select>
         </div>
-        <div className="col-md-2">
+        <div className="col-md-2 col-6">
           <label className="form-label">Cantidad</label>
           <input
             type="number"
@@ -119,7 +115,7 @@ export default function RegistrarMovimientoPage() {
             disabled={loading}
           />
         </div>
-        <div className="col-md-3">
+        <div className="col-md-3 col-12">
           <label className="form-label">Descripción</label>
           <input
             className="form-control"
@@ -130,10 +126,10 @@ export default function RegistrarMovimientoPage() {
             disabled={loading}
           />
         </div>
-        <div className="col-md-12 text-end">
+        <div className="col-12 text-end">
           <button
             type="submit"
-            className="btn btn-success"
+            className="btn btn-success w-100 w-md-auto"
             disabled={
               loading ||
               !form.producto_id ||
@@ -150,6 +146,30 @@ export default function RegistrarMovimientoPage() {
           </button>
         </div>
       </form>
+      <style>{`
+        /* Responsive form for Registrar Movimiento */
+        @media (max-width: 767.98px) {
+          .registro-movimiento-form {
+            padding: 1rem !important;
+          }
+          .registro-movimiento-form > div {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+          }
+          .registro-movimiento-form .btn {
+            width: 100% !important;
+            margin-top: 0.7rem;
+          }
+        }
+        @media (max-width: 575.98px) {
+          .registro-movimiento-form {
+            padding: 0.6rem !important;
+          }
+          h2 {
+            font-size: 1.2rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

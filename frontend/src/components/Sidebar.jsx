@@ -4,6 +4,7 @@ import {
   FaPlus,
   FaTags,
   FaFilter, 
+  FaExchangeAlt, 
   FaMapMarkerAlt,
   FaChartBar,
   FaHistory,
@@ -15,14 +16,13 @@ import {
 const menuItems = [
   { key: "inventory", label: "Inventario", icon: <FaBoxes /> },
   { key: "reports", label: "Reportes", icon: <FaChartBar /> },
-  { key: "users", label: "Usuarios", icon: <FaUserFriends /> }, // Botón de usuarios agregado aquí
+  { key: "users", label: "Usuarios", icon: <FaUserFriends /> },
   { key: "add-product", label: "Añadir Producto", icon: <FaPlus /> },
   { key: "categories", label: "Categorías", icon: <FaTags /> },
   { key: "locations", label: "Ubicaciones", icon: <FaMapMarkerAlt /> },
   { key: "bitacora", label: "Bitácora", icon: <FaFilter /> },
+  { key: "movimientos", label: "Movimientos", icon: <FaExchangeAlt /> },
   { key: "registrar-movimiento", label: "Registrar Movimiento", icon: <FaHistory /> },
-
-
 ];
 
 export default function Sidebar({
@@ -31,6 +31,15 @@ export default function Sidebar({
   isCollapsed = false,
   onToggle,
 }) {
+  // Función para manejar click en menú
+  const handleMenuClick = (key) => {
+    onChangePage(key);
+    // Si estamos en móvil (ancho < 992px), colapsar el sidebar
+    if (window.innerWidth < 992 && !isCollapsed) {
+      onToggle();
+    }
+  };
+
   return (
     <div
       className={`d-flex flex-column h-100 bg-dark shadow-lg position-relative ${
@@ -65,11 +74,9 @@ export default function Sidebar({
             "INVENTARIO"
           )}
         </span>
-        {/* Botón colapsar */}
+        {/* Botón colapsar SIEMPRE visible */}
         <button
-          className={`btn btn-link text-secondary d-none d-lg-block p-0 ms-auto ${
-            isCollapsed ? "mt-1" : ""
-          }`}
+          className={`btn btn-link text-secondary p-0 ms-auto ${isCollapsed ? "mt-1" : ""}`}
           style={{ fontSize: 20, transition: "all .25s" }}
           onClick={onToggle}
           tabIndex={-1}
@@ -84,7 +91,7 @@ export default function Sidebar({
         {menuItems.map((item) => (
           <button
             key={item.key}
-            onClick={() => onChangePage(item.key)}
+            onClick={() => handleMenuClick(item.key)}
             className={`d-flex align-items-center w-100 border-0 bg-transparent px-3 py-2 sidebar-link fs-6 fw-medium text-start position-relative ${
               currentPage === item.key
                 ? "text-warning bg-gradient bg-warning bg-opacity-10 shadow-sm"

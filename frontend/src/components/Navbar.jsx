@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useUser } from "../context/UserContext"; // Usa el context, así NO necesitas pasar user por props
+import { useUser } from "../context/UserContext";
 
 export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) {
-  const { user, logout } = useUser(); // Obtén usuario y función logout del contexto
+  const { user, logout } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef();
 
@@ -35,15 +35,15 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
   return (
     <nav className="navbar navbar-expand bg-white shadow-sm py-2 px-3 border-bottom position-sticky top-0 z-2">
       <div className="container-fluid d-flex align-items-center">
-        {/* Botón hamburguesa sidebar */}
+        {/* Botón menú/sidebar: visible SIEMPRE y en todas las resoluciones */}
         <button
           onClick={onToggleSidebar}
-          className="btn btn-link text-dark me-2 d-lg-inline d-print-none"
+          className="btn btn-link text-dark me-2 d-inline-flex d-print-none"
           style={{ transition: "transform 0.2s" }}
           title="Menú"
         >
           <i
-            className={`bi bi-list`}
+            className="bi bi-list"
             style={{
               fontSize: "1.7rem",
               transform: sidebarCollapsed ? "rotate(90deg)" : "none",
@@ -52,7 +52,7 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
           />
         </button>
         {/* Título con icono */}
-        <div className="navbar-brand d-flex align-items-center user-select-none">
+        <div className="navbar-brand d-flex align-items-center user-select-none flex-shrink-1 flex-grow-0">
           <i
             className="bi bi-box-seam-fill text-warning-emphasis me-2"
             style={{
@@ -80,6 +80,7 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
             >
               <i className="bi bi-person-fill fs-4 text-primary"></i>
             </span>
+            {/* Usuario y rol solo en md+ */}
             <span className="fw-semibold text-secondary d-none d-md-inline">
               {user.nombre}
               <span className={`badge ms-2 ${user.rol === "admin" ? "bg-primary" : "bg-secondary"}`}>
@@ -92,7 +93,7 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
             className={`dropdown-menu dropdown-menu-end shadow-sm mt-2 ${
               menuOpen ? "show" : ""
             }`}
-            style={{ minWidth: 190 }}
+            style={{ minWidth: 190, right: 0, left: "auto" }}
           >
             <li>
               <button className="dropdown-item">
@@ -122,11 +123,31 @@ export default function Navbar({ onLogout, onToggleSidebar, sidebarCollapsed }) 
         </div>
       </div>
       <style>{`
-        @keyframes bounceIn {
-          0% {transform: scale(.8);}
-          50% {transform: scale(1.15);}
-          100% {transform: scale(1);}
-        }
+        @media (max-width: 575.98px) {
+  .user-dropdown-menu {
+    min-width: 94vw !important;
+    left: 3vw !important;
+    right: 3vw !important;
+    border-radius: 15px !important;
+    box-shadow: 0 8px 32px rgba(60,60,60,0.13) !important;
+    padding: 0.4rem 0 !important;
+  }
+  .user-dropdown-menu .dropdown-item {
+    font-size: 1rem !important;
+    padding: 0.8rem 1.15rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+}
+@media (max-width: 370px) {
+  .user-dropdown-menu {
+    min-width: 99vw !important;
+    left: 0.5vw !important;
+    right: 0.5vw !important;
+    border-radius: 11px !important;
+  }
+}
+
       `}</style>
     </nav>
   );

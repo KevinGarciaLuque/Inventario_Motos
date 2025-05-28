@@ -13,7 +13,6 @@ export default function CategoriesPage() {
   const [editDescripcion, setEditDescripcion] = useState("");
   const [showEdit, setShowEdit] = useState(false);
 
-  // Leer categorías
   const cargarCategorias = async () => {
     try {
       setLoading(true);
@@ -83,9 +82,10 @@ export default function CategoriesPage() {
 
   return (
     <div className="container py-4">
-      <h3 className="mb-3">Categorías</h3>
-      <form onSubmit={handleAdd} className="mb-3 row g-2">
-        <div className="col-md-4">
+      <h3 className="mb-3 text-center">Categorías</h3>
+      {/* FORMULARIO RESPONSIVO */}
+      <form onSubmit={handleAdd} className="mb-3 row g-2 categories-form">
+        <div className="col-md-4 col-12">
           <input
             className="form-control"
             placeholder="Nombre"
@@ -94,7 +94,7 @@ export default function CategoriesPage() {
             required
           />
         </div>
-        <div className="col-md-5">
+        <div className="col-md-5 col-12">
           <input
             className="form-control"
             placeholder="Descripción"
@@ -102,7 +102,7 @@ export default function CategoriesPage() {
             onChange={(e) => setDescripcion(e.target.value)}
           />
         </div>
-        <div className="col-md-3">
+        <div className="col-md-3 col-12 d-grid">
           <button
             className="btn btn-warning w-100"
             type="submit"
@@ -112,8 +112,10 @@ export default function CategoriesPage() {
           </button>
         </div>
       </form>
+
+      {/* TABLA RESPONSIVA */}
       <div className="table-responsive">
-        <table className="table table-bordered align-middle">
+        <table className="table table-bordered align-middle categories-table">
           <thead className="table-light">
             <tr>
               <th>Nombre</th>
@@ -125,7 +127,7 @@ export default function CategoriesPage() {
             {categorias.map((cat) => (
               <tr key={cat.id}>
                 <td>{cat.nombre}</td>
-                <td>{cat.descripcion}</td>
+                <td style={{ wordBreak: "break-word" }}>{cat.descripcion}</td>
                 <td>
                   <button
                     className="btn btn-outline-primary btn-sm me-2"
@@ -153,14 +155,14 @@ export default function CategoriesPage() {
         </table>
       </div>
 
-      {/* Modal de edición */}
+      {/* MODAL EDICIÓN RESPONSIVO */}
       {showEdit && (
         <div
           className="modal fade show d-block"
           tabIndex="-1"
           style={{ background: "rgba(0,0,0,0.3)" }}
         >
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered categories-modal">
             <div className="modal-content">
               <form onSubmit={handleEdit}>
                 <div className="modal-header bg-primary text-white">
@@ -192,15 +194,15 @@ export default function CategoriesPage() {
                     />
                   </div>
                 </div>
-                <div className="modal-footer bg-light">
+                <div className="modal-footer bg-light flex-column flex-sm-row gap-2">
                   <button
                     type="button"
-                    className="btn btn-outline-secondary"
+                    className="btn btn-outline-secondary w-100 w-sm-auto"
                     onClick={() => setShowEdit(false)}
                   >
                     Cancelar
                   </button>
-                  <button className="btn btn-primary" type="submit">
+                  <button className="btn btn-primary w-100 w-sm-auto" type="submit">
                     Guardar cambios
                   </button>
                 </div>
@@ -209,6 +211,52 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* ESTILOS RESPONSIVOS */}
+      <style>{`
+        /* Formulario responsivo */
+        @media (max-width: 991.98px) {
+          .categories-form > div {
+            margin-bottom: 0.5rem !important;
+          }
+        }
+        @media (max-width: 767.98px) {
+          .categories-form > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+          }
+        }
+        /* Tabla responsiva */
+        @media (max-width: 575.98px) {
+          .categories-table th,
+          .categories-table td {
+            font-size: 0.99rem !important;
+            padding: 0.34rem 0.45rem !important;
+            vertical-align: middle;
+          }
+          .categories-table th {
+            min-width: 75px;
+          }
+        }
+        /* Modal edición responsivo */
+        @media (max-width: 575.98px) {
+          .categories-modal {
+            max-width: 98vw !important;
+            margin: 0.6rem !important;
+          }
+          .modal-content {
+            border-radius: 13px !important;
+          }
+          .modal-title {
+            font-size: 1.07rem !important;
+          }
+          .modal-footer {
+            flex-direction: column !important;
+            gap: 0.7rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

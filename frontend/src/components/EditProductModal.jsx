@@ -27,7 +27,6 @@ export default function EditProductModal({
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Cuando cambie el producto, llena el formulario
   useEffect(() => {
     if (product) {
       setForm({
@@ -56,27 +55,23 @@ export default function EditProductModal({
 
   if (!show) return null;
 
-  // Para actualizar campos
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Imagen (opcional)
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImagenFile(file);
     setPreview(file ? URL.createObjectURL(file) : null);
   };
 
-  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     let imageUrl = form.imagen;
 
-    // Si se cambió imagen, sube primero
     if (imagenFile) {
       const formData = new FormData();
       formData.append("imagen", imagenFile);
@@ -92,14 +87,13 @@ export default function EditProductModal({
       }
     }
 
-    // Actualiza el producto
     try {
       await api.put(`/productos/${product.id}`, {
         ...form,
         imagen: imageUrl,
       });
       alert("Producto actualizado correctamente");
-      onUpdated(); // Refresca lista padre
+      onUpdated();
       onClose();
     } catch (error) {
       alert("Error al actualizar el producto");
@@ -111,11 +105,11 @@ export default function EditProductModal({
     <div
       className="modal fade show d-block"
       tabIndex="-1"
-      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+      style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 2000 }}
       aria-modal="true"
       role="dialog"
     >
-      <div className="modal-dialog modal-dialog-centered">
+      <div className="modal-dialog modal-dialog-centered modal-responsive-edit">
         <form
           className="modal-content border-0 shadow-lg"
           onSubmit={handleSubmit}
@@ -126,11 +120,12 @@ export default function EditProductModal({
               type="button"
               className="btn-close btn-close-white"
               onClick={onClose}
+              aria-label="Cerrar"
             />
           </div>
           <div className="modal-body">
             <div className="row g-3">
-              <div className="col-md-6">
+              <div className="col-md-6 col-12">
                 <label className="form-label">Código</label>
                 <input
                   className="form-control"
@@ -140,7 +135,7 @@ export default function EditProductModal({
                   required
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-md-6 col-12">
                 <label className="form-label">Nombre</label>
                 <input
                   className="form-control"
@@ -150,7 +145,7 @@ export default function EditProductModal({
                   required
                 />
               </div>
-              <div className="col-md-6">
+              <div className="col-md-6 col-12">
                 <label className="form-label">Categoría</label>
                 <select
                   className="form-select"
@@ -167,7 +162,7 @@ export default function EditProductModal({
                   ))}
                 </select>
               </div>
-              <div className="col-md-6">
+              <div className="col-md-6 col-12">
                 <label className="form-label">Ubicación</label>
                 <select
                   className="form-select"
@@ -184,7 +179,7 @@ export default function EditProductModal({
                   ))}
                 </select>
               </div>
-              <div className="col-md-4">
+              <div className="col-md-4 col-12">
                 <label className="form-label">Stock</label>
                 <input
                   type="number"
@@ -196,7 +191,7 @@ export default function EditProductModal({
                   required
                 />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-4 col-12">
                 <label className="form-label">Stock mínimo</label>
                 <input
                   type="number"
@@ -208,7 +203,7 @@ export default function EditProductModal({
                   required
                 />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-4 col-12">
                 <label className="form-label">Precio</label>
                 <input
                   type="number"
@@ -230,7 +225,7 @@ export default function EditProductModal({
                   onChange={handleChange}
                 ></textarea>
               </div>
-              <div className="col-6">
+              <div className="col-12 col-sm-6">
                 <label className="form-label">Imagen</label>
                 <input
                   type="file"
@@ -244,17 +239,17 @@ export default function EditProductModal({
                       src={preview}
                       alt="preview"
                       className="img-thumbnail"
-                      style={{ maxHeight: 90 }}
+                      style={{ maxHeight: 90, maxWidth: "100%" }}
                     />
                   </div>
                 )}
               </div>
             </div>
           </div>
-          <div className="modal-footer bg-light">
+          <div className="modal-footer bg-light flex-column flex-sm-row gap-2">
             <button
               type="button"
-              className="btn btn-outline-secondary"
+              className="btn btn-outline-secondary w-100 w-sm-auto"
               onClick={onClose}
               disabled={loading}
             >
@@ -262,7 +257,7 @@ export default function EditProductModal({
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn btn-primary w-100 w-sm-auto"
               disabled={loading}
             >
               {loading ? "Guardando..." : "Guardar Cambios"}
@@ -270,6 +265,46 @@ export default function EditProductModal({
           </div>
         </form>
       </div>
+      {/* Estilos responsivos */}
+      <style>{`
+        @media (max-width: 991.98px) {
+          .modal-responsive-edit {
+            max-width: 98vw !important;
+            min-width: 0 !important;
+            margin: 1rem !important;
+          }
+        }
+        @media (max-width: 767.98px) {
+          .modal-responsive-edit {
+            max-width: 99vw !important;
+            margin: 0.5rem !important;
+          }
+        }
+        @media (max-width: 575.98px) {
+          .modal-responsive-edit {
+            max-width: 100vw !important;
+            margin: 0.2rem !important;
+          }
+          .modal-content {
+            border-radius: 14px !important;
+            padding: 0.4rem 0.2rem !important;
+          }
+        }
+        /* Botones stack en móvil */
+        @media (max-width: 575.98px) {
+          .modal-footer {
+            flex-direction: column !important;
+            gap: 0.6rem !important;
+          }
+        }
+        /* Inputs más grandes y cómodos en móvil */
+        @media (max-width: 575.98px) {
+          .form-control, .form-select {
+            font-size: 1.07rem !important;
+            min-height: 2.4rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

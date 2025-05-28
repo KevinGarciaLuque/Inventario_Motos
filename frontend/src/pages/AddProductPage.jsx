@@ -19,11 +19,8 @@ export default function AddProductPage() {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 1. OBTENER usuario_id DEL USUARIO LOGUEADO
-  // Lo más común es que lo tengas en localStorage, sessionStorage, o contexto.
-  // Ejemplo usando localStorage:
+  // Obtén usuario_id del usuario logueado
   const usuario_id = JSON.parse(localStorage.getItem("usuario"))?.id;
-  // Si usas contexto de autenticación, usa el hook adecuado para traer el id
 
   useEffect(() => {
     api.get("/categorias").then((res) => setCategorias(res.data));
@@ -41,9 +38,6 @@ export default function AddProductPage() {
     setPreview(file ? URL.createObjectURL(file) : null);
   };
 
-  // =======================
-  // Este es el submit principal
-  // =======================
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -65,14 +59,11 @@ export default function AddProductPage() {
     }
 
     try {
-      // ============ AQUI ES DONDE AGREGAS usuario_id ==============
       await api.post("/productos", {
         ...form,
         imagen: imageUrl,
-        usuario_id, // <-- Se envía el ID del usuario que está haciendo el registro
+        usuario_id,
       });
-      // ===========================================================
-
       alert("Producto agregado correctamente");
       setForm({
         codigo: "",
@@ -98,10 +89,9 @@ export default function AddProductPage() {
       <h2 className="mb-4 text-center">Añadir Nuevo Repuesto</h2>
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-4 shadow rounded row g-3"
+        className="bg-white p-4 shadow rounded row g-3 add-product-form"
       >
-        {/* ...el resto del formulario igual... */}
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Código</label>
           <input
             className="form-control"
@@ -111,7 +101,7 @@ export default function AddProductPage() {
             required
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Nombre</label>
           <input
             className="form-control"
@@ -121,7 +111,7 @@ export default function AddProductPage() {
             required
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Categoría</label>
           <select
             className="form-select"
@@ -138,7 +128,7 @@ export default function AddProductPage() {
             ))}
           </select>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Ubicación</label>
           <select
             className="form-select"
@@ -155,7 +145,7 @@ export default function AddProductPage() {
             ))}
           </select>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Stock</label>
           <input
             type="number"
@@ -167,7 +157,7 @@ export default function AddProductPage() {
             required
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Stock mínimo</label>
           <input
             type="number"
@@ -179,7 +169,7 @@ export default function AddProductPage() {
             required
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 col-12">
           <label className="form-label">Precio</label>
           <input
             type="number"
@@ -191,7 +181,7 @@ export default function AddProductPage() {
             required
           />
         </div>
-        <div className="col-md-8">
+        <div className="col-md-8 col-12">
           <label className="form-label">Descripción</label>
           <textarea
             className="form-control"
@@ -201,7 +191,7 @@ export default function AddProductPage() {
             onChange={handleChange}
           ></textarea>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-6 col-12">
           <label className="form-label">Imagen</label>
           <input
             type="file"
@@ -215,12 +205,12 @@ export default function AddProductPage() {
                 src={preview}
                 alt="preview"
                 className="img-thumbnail"
-                style={{ maxHeight: 150 }}
+                style={{ maxHeight: 140, maxWidth: "100%" }}
               />
             </div>
           )}
         </div>
-        <div className="col-md-6 d-flex align-items-end">
+        <div className="col-md-6 col-12 d-flex align-items-end">
           <button
             type="submit"
             className="btn btn-warning w-100"
@@ -230,6 +220,38 @@ export default function AddProductPage() {
           </button>
         </div>
       </form>
+      <style>{`
+        /* FORMULARIO RESPONSIVO */
+        @media (max-width: 991.98px) {
+          .add-product-form > div {
+            margin-bottom: 0.4rem !important;
+          }
+        }
+        @media (max-width: 767.98px) {
+          .add-product-form > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+          }
+          .add-product-form {
+            padding: 1.2rem 0.3rem !important;
+            border-radius: 13px !important;
+          }
+        }
+        @media (max-width: 575.98px) {
+          .add-product-form .form-label,
+          .add-product-form .form-control,
+          .add-product-form .form-select,
+          .add-product-form textarea {
+            font-size: 1.07rem !important;
+          }
+          .add-product-form button {
+            font-size: 1.08rem !important;
+            padding: 0.8rem 1.2rem !important;
+            border-radius: 10px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }

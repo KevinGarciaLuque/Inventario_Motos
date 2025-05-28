@@ -12,6 +12,7 @@ export default function InventoryPage({ onView }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
+  const [stockFilter, setStockFilter] = useState(""); // Nuevo filtro
   const [loading, setLoading] = useState(false);
 
   // Para editar
@@ -52,21 +53,75 @@ export default function InventoryPage({ onView }) {
   };
 
   // Filtrado
-  const filtered = items.filter(
-    (item) =>
-      item.nombre.toLowerCase().includes(search.toLowerCase()) &&
-      (category ? Number(item.categoria_id) === Number(category) : true) &&
-      (location ? Number(item.ubicacion_id) === Number(location) : true)
+  const filtered = items.filter((item) =>
+    item.nombre.toLowerCase().includes(search.toLowerCase()) &&
+    (category ? Number(item.categoria_id) === Number(category) : true) &&
+    (location ? Number(item.ubicacion_id) === Number(location) : true) &&
+    (stockFilter === ""
+      ? true
+      : stockFilter === "bajo"
+      ? item.stock <= (item.stock_minimo || 1)
+      : item.stock > (item.stock_minimo || 1))
   );
 
   return (
     <section className="container py-4">
       <h2 className="mb-4 text-center">Inventario de Repuestos</h2>
-      <div className="row g-3 mb-3 align-items-center">
-        {/* ...[los filtros igual que antes] */}
+      {/* FILTROS */}
+      <div className="row g-2 g-sm-3 mb-3 inventory-filtros">
+        <div className="col-12 col-sm-4 col-md-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar producto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="col-12 col-sm-4 col-md-3">
+          <select
+            className="form-select"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-12 col-sm-4 col-md-3">
+          <select
+            className="form-select"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          >
+            <option value="">Todas las ubicaciones</option>
+            {ubicaciones.map((ubi) => (
+              <option key={ubi.id} value={ubi.id}>
+                {ubi.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* Filtro extra por stock */}
+        <div className="col-12 col-md-3">
+          <select
+            className="form-select"
+            value={stockFilter}
+            onChange={(e) => setStockFilter(e.target.value)}
+          >
+            <option value="">Todos los productos</option>
+            <option value="bajo">Solo stock bajo</option>
+            <option value="suficiente">Solo stock suficiente</option>
+          </select>
+        </div>
       </div>
+      {/* TABLA */}
       <div className="bg-white shadow rounded table-responsive">
-        <table className="table table-bordered align-middle">
+        <table className="table table-bordered align-middle inventory-table">
           <thead className="table-light">
             <tr>
               <th>Imagen</th>
@@ -118,7 +173,13 @@ export default function InventoryPage({ onView }) {
                   <td>{item.nombre}</td>
                   <td>{item.categoria || "-"}</td>
                   <td>{item.ubicacion || "-"}</td>
-                  <td>{item.stock}</td>
+                  <td>
+                    <span className={item.stock <= (item.stock_minimo || 1)
+                        ? "badge bg-danger bg-opacity-25 text-danger"
+                        : "badge bg-success bg-opacity-25 text-success"}>
+                      {item.stock}
+                    </span>
+                  </td>
                   <td>
                     {item.precio
                       ? Number(item.precio).toLocaleString("es-HN", {
@@ -168,6 +229,36 @@ export default function InventoryPage({ onView }) {
         onClose={() => setEditModal({ show: false, product: null })}
         onUpdated={cargarDatos}
       />
+
+      {/* Estilos responsivos */}
+      <style>{`
+        /* Filtros apilados en móvil */
+        @media (max-width: 767.98px) {
+          .inventory-filtros {
+            flex-direction: column !important;
+            gap: 0.6rem !important;
+          }
+          .inventory-filtros > * {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+        }
+        /* Tabla scroll y tamaño en móvil */
+        @media (max-width: 575.98px) {
+          .inventory-table th, .inventory-table td {
+            font-size: 0.97rem !important;
+            padding: 0.35rem 0.4rem !important;
+            vertical-align: middle;
+          }
+          .inventory-table th {
+            min-width: 75px;
+          }
+          .inventory-table td {
+            word-break: break-word;
+            white-space: pre-line;
+          }
+        }
+      `}</style>
     </section>
   );
 }

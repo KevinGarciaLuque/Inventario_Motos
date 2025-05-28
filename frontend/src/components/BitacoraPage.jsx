@@ -10,7 +10,6 @@ export default function BitacoraPage() {
   const [accionFiltro, setAccionFiltro] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Cargar bitácora y usuarios para filtros
   useEffect(() => {
     const fetchBitacora = async () => {
       setLoading(true);
@@ -29,7 +28,6 @@ export default function BitacoraPage() {
     fetchBitacora();
   }, []);
 
-  // Filtros
   const filtrados = registros.filter((r) => {
     const cumpleBusqueda =
       busqueda === "" ||
@@ -40,23 +38,22 @@ export default function BitacoraPage() {
     return cumpleBusqueda && cumpleUsuario && cumpleAccion;
   });
 
-  // Obtener lista única de acciones para filtro
   const accionesUnicas = [
     ...new Set(registros.map((r) => r.accion).filter(Boolean)),
   ];
 
-  // Obtener nombre del usuario por id
   const nombreUsuario = (id) =>
     usuarios.find((u) => u.id === id)?.nombre || "Desconocido";
 
   return (
     <div className="container py-4">
-      <div className="d-flex flex-wrap align-items-center mb-4 gap-2">
-        <h2 className="mb-0 me-auto">
+      {/* Filtros */}
+      <div className="bitacora-filtros d-flex flex-wrap align-items-center mb-4 gap-2">
+        <h2 className="mb-0 me-auto bitacora-title">
           <FaFilter className="text-warning me-2" />
           Bitácora del Sistema
         </h2>
-        <div className="input-group" style={{ maxWidth: 300 }}>
+        <div className="input-group filtro-input-search">
           <span className="input-group-text bg-white border-end-0">
             <FaSearch className="text-muted" />
           </span>
@@ -68,8 +65,7 @@ export default function BitacoraPage() {
           />
         </div>
         <select
-          className="form-select"
-          style={{ maxWidth: 180 }}
+          className="form-select filtro-select"
           value={usuarioFiltro}
           onChange={(e) => setUsuarioFiltro(e.target.value)}
         >
@@ -81,8 +77,7 @@ export default function BitacoraPage() {
           ))}
         </select>
         <select
-          className="form-select"
-          style={{ maxWidth: 180 }}
+          className="form-select filtro-select"
           value={accionFiltro}
           onChange={(e) => setAccionFiltro(e.target.value)}
         >
@@ -106,10 +101,11 @@ export default function BitacoraPage() {
         </button>
       </div>
 
+      {/* Tabla */}
       <div className="card shadow-sm">
         <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-bordered table-hover align-middle mb-0">
+            <table className="table table-bordered table-hover align-middle mb-0 bitacora-table">
               <thead className="table-light">
                 <tr>
                   <th style={{ width: 120 }}>Fecha</th>
@@ -167,6 +163,44 @@ export default function BitacoraPage() {
           </div>
         </div>
       </div>
+
+      {/* Estilos responsivos */}
+      <style>{`
+        /* Filtros adaptativos */
+        @media (max-width: 991.98px) {
+          .bitacora-filtros {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.7rem !important;
+          }
+          .bitacora-title {
+            margin-bottom: 0.2rem !important;
+            font-size: 1.2rem !important;
+          }
+        }
+        @media (max-width: 575.98px) {
+          .filtro-input-search, .filtro-select {
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          .bitacora-title {
+            font-size: 1.03rem !important;
+          }
+        }
+        /* Tabla: celdas pequeñas y scroll en móvil */
+        @media (max-width: 575.98px) {
+          .bitacora-table th, .bitacora-table td {
+            font-size: 0.93rem !important;
+            padding: 0.38rem 0.5rem !important;
+            min-width: 84px;
+            vertical-align: middle;
+          }
+          .bitacora-table td {
+            word-break: break-word;
+            white-space: pre-line;
+          }
+        }
+      `}</style>
     </div>
   );
 }
